@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>funpay/tearzzq — каталог оформлений</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;600;700&family=Manrope:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+<header class="hero">
+  <div class="hero__sky"></div>
+  <img class="hero__skyline" src="images/skyline.svg" alt="" aria-hidden="true">
+  <div class="hero__mist"></div>
+
+  <nav class="hero__nav">
+    <span class="status"><span class="status__dot"></span>Онлайн</span>
+    <span class="rating">★ 4.8 · 2255 отзывов</span>
+  </nav>
+
+  <div class="hero__body">
+    <div class="avatar">
+      <svg class="avatar__ring" viewBox="0 0 220 220">
+        <circle cx="110" cy="110" r="98"></circle>
+        <circle cx="110" cy="110" r="98" class="avatar__ring-sweep"></circle>
+      </svg>
+      <div class="avatar__photo" style="background-image:url('images/design-01.png')"></div>
+    </div>
+
+    <div class="logo">
+      <span class="logo__pre">funpay</span><span class="logo__slash">/</span><span class="logo__name">tearzzq</span>
+    </div>
+    <p class="tagline">Авторские оформления Steam-профилей. Каждая витрина — под конкретный номер.</p>
+    <a href="#catalog" class="scroll-cue">Каталог оформлений ↓</a>
+  </div>
+</header>
+
+<main id="catalog" class="catalog">
+  <div class="catalog__head">
+    <span class="eyebrow">Каталог</span>
+    <h2>Выбери витрину — пришли номер в лс</h2>
+    <p class="catalog__hint">Нажми на карточку, чтобы открыть в полный экран. Кнопка «Выбрать» скопирует готовое сообщение и откроет FunPay.</p>
+  </div>
+
+  <div class="grid" id="grid">
+    <!-- rendered by js/main.js -->
+  </div>
+</main>
+
+<footer class="site-footer">
+  <p>funpay/tearzzq — <a href="https://funpay.com/users/12579286/" target="_blank" rel="noopener">funpay.com/users/12579286</a></p>
+  <p class="site-footer__muted">Сайт — авторская витрина, не аффилирован с FunPay.</p>
+</footer>
+
+<div class="lightbox" id="lightbox" aria-hidden="true">
+  <div class="lightbox__backdrop" data-close></div>
+  <div class="lightbox__frame">
+    <button class="lightbox__close" data-close aria-label="Закрыть">✕</button>
+    <button class="lightbox__nav lightbox__nav--prev" id="prevBtn" aria-label="Предыдущее">‹</button>
+    <figure class="lightbox__figure">
+      <img id="lightboxImg" src="" alt="">
+      <figcaption>
+        <span class="lightbox__num" id="lightboxNum">№01</span>
+        <span class="lightbox__title" id="lightboxTitle"></span>
+      </figcaption>
+    </figure>
+    <button class="lightbox__nav lightbox__nav--next" id="nextBtn" aria-label="Следующее">›</button>
+
+    <button class="pick-btn" id="pickBtn">Выбрать это оформление →</button>
+    <p class="pick-hint" id="pickHint" aria-live="polite"></p>
+  </div>
+</div>
+
+<script src="js/main.js"></script>
+</body>
+</html>
