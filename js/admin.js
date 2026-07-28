@@ -1,29 +1,184 @@
+// ---------- storage of connection settings (this browser only) ----------
+
+const STORAGE_KEY = "tearzzq_admin_conn";
+
+function loadConn() {
+  try {
+    return JSON.parse(localStorage.getItem(STORAGE_KEY)) || {};
+  } catch (e) {
+    return {};
+  }
+}
+
+function saveConn(conn) {
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(conn));
+}
+
+const ownerInput = document.getElementById("ownerInput");
+const repoInput = document.getElementById("repoInput");
+const branchInput = document.getElementById("branchInput");
+const tokenInput = document.getElementById("tokenInput");
+const connState = document.getElementById("connState");
+
+(function restoreConn() {
+  const c = loadConn();
+  if (c.owner) ownerInput.value = c.owner;
+  if (c.repo) repoInput.value = c.repo;
+  if (c.branch) branchInput.value = c.branch;
+  if (c.token) tokenInput.value = c.token;
+  if (c.owner && c.repo && c.token) {
+    connState.textContent = "Подключение сохранено в этом браузере";
+    connState.className = "conn-state ok";
+  }
+})();
+
+document.getElementById("saveConnBtn").addEventListener("click", async () => {
+  const conn = {
+    owner: ownerInput.value.trim(),
+    repo: repoInput.value.trim(),
+    branch: branchInput.value.trim() || "main",
+    token: tokenInput.value.trim()
+  };
+  if (!conn.owner || !conn.repo || !conn.token) {
+    connState.textContent = "Заполни владельца, репозиторий и токен";
+    connState.className = "conn-state bad";
+    return;
+  }
+  saveConn(conn);
+  connState.textContent = "Проверяю доступ...";
+  connState.className = "conn-state";
+  try {
+    const res = await fetch(`https://api.github.com/repos/${conn.owner}/${conn.repo}`, {
+      headers: { Authorization: `Bearer ${conn.token}`, Accept: "application/vnd.github+json" }
+    });
+    if (!res.ok) throw new Error(res.status === 401 ? "неверный токен" : `репозиторий не найден (${res.status})`);
+    connState.textContent = "Готово — подключение работает и сохранено";
+    connState.className = "conn-state ok";
+    suggestNextId();
+  } catch (e) {
+    connState.textContent = `Не получилось: ${e.message}`;
+    connState.className = "conn-state bad";
+  }
+});
+
+// ---------- github helpers ----------
+
+function getConn() {
+  return {
+    owner: ownerInput.value.trim(),
+    repo: repoInput.value.trim(),
+    branch: branchInput.value.trim() || "main",
+    token: tokenInput.value.trim()
+  };
+}
+
+async function ghGet(path) {
+  const { owner, repo, branch, token } = getConn();
+  const res = await fetch(
+    `https://api.github.com/repos/${owner}/${repo}/contents/${path}?ref=${branch}`,
+    { headers: { Authorization: `Bearer ${token}`, Accept: "application/vnd.github+json" } }
+  );
+  if (res.status === 404) return null;
+  if (!res.ok) throw new Error(`GitHub (${res.status}): ${(await res.json()).message || "ошибка"}`);
+  return res.json();
+}
+
+async function ghPut(path, contentBase64, sha, message) {
+  const { owner, repo, branch, token } = getConn();
+  const body = { message, content: contentBase64, branch };
+  if (sha) body.sha = sha;
+  const res = await fetch(
+    `https://api.github.com/repos/${owner}/${repo}/contents/${path}`,
+    {
+      method: "PUT",
+      headers: {
+        Authorization: `Bearer ${token}`,
+        Accept: "application/vnd.github+json",
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify(body)
+    }
+  );
+  if (!res.ok) throw new Error(`GitHub (${res.status}): ${(await res.json()).message || "ошибка"}`);
+  return res.json();
+}
+
+function utf8ToBase64(str) {
+  const bytes = new TextEncoder().encode(str);
+  let binary = "";
+  bytes.forEach(b => (binary += String.fromCharCode(b)));
+  return btoa(binary);
+}
+
+function base64ToUtf8(b64) {
+  const binary = atob(b64.replace(/\n/g, ""));
+  const bytes = Uint8Array.from(binary, c => c.charCodeAt(0));
+  return new TextDecoder("utf-8").decode(bytes);
+}
+
+function fileToBase64(file) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(reader.result.split(",")[1]);
+    reader.onerror = reject;
+    reader.readAsDataURL(file);
+  });
+}
+
+async function suggestNextId() {
+  try {
+    const file = await ghGet("data/designs.json");
+    if (!file) return;
+    const designs = JSON.parse(base64ToUtf8(file.content));
+    const maxId = designs.reduce((m, d) => Math.max(m, d.id || 0), 0);
+    idInput.value = maxId + 1;
+  } catch (e) {
+    // silent — not critical
+  }
+}
+
+// ---------- publish flow ----------
+
 const idInput = document.getElementById("idInput");
 const titleInput = document.getElementById("titleInput");
 const fileInput = document.getElementById("fileInput");
 const preview = document.getElementById("preview");
+const publishBtn = document.getElementById("publishBtn");
+const statusEl = document.getElementById("status");
 const downloadLink = document.getElementById("downloadLink");
 const jsonOut = document.getElementById("jsonOut");
-const copyBtn = document.getElementById("copyBtn");
 
 let currentFile = null;
 
 function pad(n) { return String(n || 0).padStart(2, "0"); }
 
-function refresh() {
+function log(line, cls) {
+  const span = document.createElement("div");
+  if (cls) span.className = cls;
+  span.textContent = line;
+  statusEl.appendChild(span);
+}
+
+fileInput.addEventListener("change", () => {
+  currentFile = fileInput.files[0] || null;
+  if (currentFile) {
+    preview.src = URL.createObjectURL(currentFile);
+    preview.style.display = "block";
+    refreshManualFallback();
+  }
+});
+
+function refreshManualFallback() {
   const id = parseInt(idInput.value || "0", 10);
   const title = titleInput.value.trim() || "Без названия";
   const ext = currentFile ? currentFile.name.split(".").pop() : "png";
   const filename = `design-${pad(id)}.${ext}`;
 
-  const entry = {
-    id: id || 0,
-    title,
-    image: `images/${filename}`,
-    note: ""
-  };
-
-  jsonOut.value = JSON.stringify(entry, null, 2) + ",";
+  jsonOut.value = JSON.stringify(
+    { id: id || 0, title, image: `images/${filename}`, note: "" },
+    null,
+    2
+  ) + ",";
 
   if (currentFile) {
     downloadLink.href = URL.createObjectURL(currentFile);
@@ -33,26 +188,69 @@ function refresh() {
   }
 }
 
-fileInput.addEventListener("change", () => {
-  currentFile = fileInput.files[0] || null;
-  if (currentFile) {
-    preview.src = URL.createObjectURL(currentFile);
-    preview.style.display = "block";
+idInput.addEventListener("input", refreshManualFallback);
+titleInput.addEventListener("input", refreshManualFallback);
+
+publishBtn.addEventListener("click", async () => {
+  statusEl.innerHTML = "";
+  const { owner, repo, token } = getConn();
+  const id = parseInt(idInput.value || "0", 10);
+  const title = titleInput.value.trim();
+
+  if (!owner || !repo || !token) {
+    log("Сначала сохрани подключение к GitHub выше.", "err");
+    return;
   }
-  refresh();
-});
+  if (!id || !title || !currentFile) {
+    log("Заполни номер, название и выбери файл.", "err");
+    return;
+  }
 
-idInput.addEventListener("input", refresh);
-titleInput.addEventListener("input", refresh);
+  publishBtn.disabled = true;
+  refreshManualFallback();
+  const ext = currentFile.name.split(".").pop().toLowerCase();
+  const filename = `design-${pad(id)}.${ext}`;
 
-copyBtn.addEventListener("click", async () => {
   try {
-    await navigator.clipboard.writeText(jsonOut.value);
-    copyBtn.textContent = "Скопировано ✓";
-    setTimeout(() => (copyBtn.textContent = "Скопировать JSON"), 1500);
+    log(`Заливаю images/${filename}...`);
+    const imgBase64 = await fileToBase64(currentFile);
+    const existingImg = await ghGet(`images/${filename}`);
+    await ghPut(
+      `images/${filename}`,
+      imgBase64,
+      existingImg ? existingImg.sha : null,
+      `Добавлено изображение: оформление №${pad(id)}`
+    );
+    log(`images/${filename} загружено ✓`, "ok");
+
+    log("Обновляю data/designs.json...");
+    const designsFile = await ghGet("data/designs.json");
+    if (!designsFile) throw new Error("data/designs.json не найден в репозитории");
+    const designs = JSON.parse(base64ToUtf8(designsFile.content));
+
+    const entry = { id, title, image: `images/${filename}`, note: "" };
+    const idx = designs.findIndex(d => d.id === id);
+    if (idx >= 0) designs[idx] = entry; else designs.push(entry);
+    designs.sort((a, b) => a.id - b.id);
+
+    const newContent = JSON.stringify(designs, null, 2) + "\n";
+    await ghPut(
+      "data/designs.json",
+      utf8ToBase64(newContent),
+      designsFile.sha,
+      `Каталог: оформление №${pad(id)} — ${title}`
+    );
+    log("data/designs.json обновлён ✓", "ok");
+    log("Готово! Обнови сайт через 10–30 секунд.", "ok");
+
+    idInput.value = id + 1;
+    titleInput.value = "";
+    fileInput.value = "";
+    preview.style.display = "none";
+    currentFile = null;
   } catch (e) {
-    jsonOut.select();
+    log(`Ошибка: ${e.message}`, "err");
+  } finally {
+    publishBtn.disabled = false;
   }
 });
-
-refresh();
