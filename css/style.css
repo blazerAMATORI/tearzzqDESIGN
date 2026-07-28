@@ -359,12 +359,58 @@ a { color: inherit; }
 }
 .pick-btn:hover { background: var(--cyan); color: #04050a; }
 
-.pick-hint {
+.toast {
+  position: fixed;
+  left: 50%;
+  bottom: 28px;
+  transform: translateX(-50%) translateY(20px);
+  z-index: 100;
+  width: min(92vw, 420px);
+  background: var(--panel-2);
+  border: 1px solid var(--cyan-soft);
+  border-radius: 6px;
+  padding: 16px 18px;
+  box-shadow: 0 12px 40px rgba(0,0,0,0.5), 0 0 30px rgba(82,230,242,0.08);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.3s ease, transform 0.3s ease;
+  font-size: 13px;
+  color: var(--ink);
+}
+.toast.is-visible {
+  opacity: 1;
+  transform: translateX(-50%) translateY(0);
+  pointer-events: auto;
+}
+.toast strong {
+  display: block;
+  color: var(--cyan);
+  font-family: var(--mono);
+  font-size: 12.5px;
+  margin-bottom: 8px;
+}
+.toast ol {
+  margin: 0;
+  padding-left: 18px;
+  color: var(--ink-muted);
+  line-height: 1.5;
+}
+.toast ol li + li { margin-top: 4px; }
+.toast__manual {
+  display: block;
+  background: var(--panel);
+  border: 1px solid #262a38;
+  border-radius: 3px;
+  padding: 8px 10px;
   font-family: var(--mono);
   font-size: 11px;
-  color: var(--ink-muted);
-  min-height: 14px;
-  margin: -8px 0 0;
+  color: var(--ink);
+  margin-bottom: 10px;
+  word-break: break-word;
+}
+
+@media (max-width: 640px) {
+  .toast { bottom: 16px; }
 }
 
 @media (max-width: 640px) {
