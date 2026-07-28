@@ -4,5 +4,11 @@
     "title": "1",
     "image": "images/design-01.png",
     "note": ""
+  },
+  {
+    "id": 2,
+    "title": "2",
+    "image": "images/design-02.png",
+    "note": ""
   }
 ]
