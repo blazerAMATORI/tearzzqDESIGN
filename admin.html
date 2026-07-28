@@ -17,6 +17,21 @@
     color:#eae8f2; border-radius:3px; font-family:inherit; font-size:14px;
   }
   input[type=file] { color:#8a90a3; margin-top:4px; }
+  .catalog-list { margin-top:14px; display:flex; flex-direction:column; gap:10px; }
+  .catalog-item {
+    display:flex; align-items:center; gap:12px;
+    background:#0d0f16; border:1px solid #262a38; border-radius:4px; padding:10px 12px;
+  }
+  .catalog-item img { width:52px; height:52px; object-fit:cover; border-radius:3px; flex-shrink:0; background:#1e212c; }
+  .catalog-item__meta { flex:1; min-width:0; }
+  .catalog-item__num { font-family:"JetBrains Mono",monospace; color:#52e6f2; font-size:12px; }
+  .catalog-item__title { font-size:14px; margin-top:2px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .catalog-item__actions { display:flex; gap:8px; flex-shrink:0; }
+  .catalog-item__actions button {
+    width:auto; margin:0; padding:7px 12px; font-size:11px;
+  }
+  .btn-danger { border-color:#ff6b6b !important; color:#ff6b6b !important; }
+  .btn-danger:hover:not(:disabled) { background:#ff6b6b !important; color:#08090d !important; }
   button {
     margin-top:20px; background:transparent; border:1px solid #52e6f2; color:#52e6f2;
     padding:11px 22px; border-radius:2px; cursor:pointer; font-family:"JetBrains Mono",monospace;
@@ -24,6 +39,8 @@
   }
   button:hover:not(:disabled) { background:#52e6f2; color:#04050a; }
   button:disabled { opacity:0.4; cursor:not-allowed; }
+  button.secondary { border-color:#3a3f4d; color:#8a90a3; }
+  button.secondary:hover:not(:disabled) { background:#3a3f4d; color:#eae8f2; }
   #preview { margin-top:12px; max-width:200px; border-radius:4px; display:none; }
   .status { margin-top:16px; font-family:"JetBrains Mono",monospace; font-size:12px; line-height:1.7; color:#8a90a3; white-space:pre-wrap; }
   .status .ok { color:#52e6f2; }
@@ -82,10 +99,18 @@
 
   <label>Файл изображения</label>
   <input type="file" id="fileInput" accept="image/*">
+  <p class="hint" style="margin-top:6px;">При редактировании можно оставить это поле пустым — картинка не изменится, обновится только название.</p>
   <img id="preview">
 
   <button id="publishBtn">Опубликовать на сайт →</button>
+  <button id="cancelEditBtn" class="secondary" style="display:none;">Отменить редактирование</button>
   <div class="status" id="status"></div>
+</div>
+
+<div class="card">
+  <h2>3. Текущий каталог</h2>
+  <button id="refreshListBtn" class="secondary">Обновить список</button>
+  <div class="catalog-list" id="catalogList"></div>
 </div>
 
 <details>
