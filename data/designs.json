@@ -10,5 +10,11 @@
     "title": "2",
     "image": "images/design-02.png",
     "note": ""
+  },
+  {
+    "id": 3,
+    "title": "3",
+    "image": "images/design-03.png",
+    "note": ""
   }
 ]
