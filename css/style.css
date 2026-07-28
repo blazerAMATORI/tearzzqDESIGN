@@ -346,6 +346,7 @@ a { color: inherit; }
 .lightbox__nav:hover { border-color: var(--cyan-soft); color: var(--cyan); }
 
 .pick-btn {
+  position: relative;
   font-family: var(--mono);
   font-size: 13px;
   letter-spacing: 0.03em;
@@ -358,6 +359,38 @@ a { color: inherit; }
   transition: background 0.25s ease, color 0.25s ease;
 }
 .pick-btn:hover { background: var(--cyan); color: #04050a; }
+
+.pick-btn::after {
+  content: attr(data-tooltip);
+  position: absolute;
+  bottom: calc(100% + 12px);
+  left: 50%;
+  transform: translateX(-50%) translateY(4px);
+  width: 260px;
+  background: var(--panel-2);
+  border: 1px solid var(--cyan-soft);
+  color: var(--ink-muted);
+  font-family: var(--body);
+  font-size: 12px;
+  line-height: 1.5;
+  letter-spacing: normal;
+  padding: 10px 12px;
+  border-radius: 4px;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.4);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.2s ease, transform 0.2s ease;
+  z-index: 5;
+}
+.pick-btn:hover::after,
+.pick-btn:focus-visible::after {
+  opacity: 1;
+  transform: translateX(-50%) translateY(0);
+}
+
+@media (hover: none) {
+  .pick-btn::after { display: none; }
+}
 
 .toast {
   position: fixed;
