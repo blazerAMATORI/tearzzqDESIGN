@@ -3,56 +3,99 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Добавить оформление — admin</title>
+<title>Опубликовать оформление — admin</title>
 <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
 <style>
   body { background:#08090d; color:#eae8f2; font-family:"Manrope",sans-serif; max-width:720px; margin:40px auto; padding:0 20px 80px; }
-  h1 { font-size:22px; }
-  p.hint { color:#8a90a3; font-size:14px; line-height:1.5; }
-  label { display:block; margin:20px 0 6px; font-family:"JetBrains Mono",monospace; font-size:12px; color:#52e6f2; }
-  input[type=text], input[type=number] { width:100%; padding:10px; background:#12141c; border:1px solid #262a38; color:#eae8f2; border-radius:3px; font-family:inherit; font-size:14px; }
-  input[type=file] { color:#8a90a3; }
-  button { margin-top:24px; background:transparent; border:1px solid #52e6f2; color:#52e6f2; padding:10px 20px; border-radius:2px; cursor:pointer; font-family:"JetBrains Mono",monospace; font-size:13px; }
-  button:hover { background:#52e6f2; color:#04050a; }
-  #preview { margin-top:16px; max-width:220px; border-radius:4px; display:none; }
-  textarea { width:100%; height:160px; margin-top:10px; background:#12141c; border:1px solid #262a38; color:#eae8f2; font-family:"JetBrains Mono",monospace; font-size:12px; padding:12px; border-radius:3px; }
-  .step { border-left:2px solid #262a38; padding-left:16px; margin:32px 0; }
+  h1 { font-size:22px; margin-bottom:4px; }
+  h2 { font-size:15px; font-family:"JetBrains Mono",monospace; color:#52e6f2; margin:0 0 4px; }
+  p.hint { color:#8a90a3; font-size:13px; line-height:1.55; }
+  .card { background:#12141c; border:1px solid #1e212c; border-radius:6px; padding:20px 22px; margin:22px 0; }
+  label { display:block; margin:16px 0 6px; font-family:"JetBrains Mono",monospace; font-size:12px; color:#8a90a3; }
+  input[type=text], input[type=number], input[type=password] {
+    width:100%; padding:10px; background:#0d0f16; border:1px solid #262a38;
+    color:#eae8f2; border-radius:3px; font-family:inherit; font-size:14px;
+  }
+  input[type=file] { color:#8a90a3; margin-top:4px; }
+  button {
+    margin-top:20px; background:transparent; border:1px solid #52e6f2; color:#52e6f2;
+    padding:11px 22px; border-radius:2px; cursor:pointer; font-family:"JetBrains Mono",monospace;
+    font-size:13px; width:100%;
+  }
+  button:hover:not(:disabled) { background:#52e6f2; color:#04050a; }
+  button:disabled { opacity:0.4; cursor:not-allowed; }
+  #preview { margin-top:12px; max-width:200px; border-radius:4px; display:none; }
+  .status { margin-top:16px; font-family:"JetBrains Mono",monospace; font-size:12px; line-height:1.7; color:#8a90a3; white-space:pre-wrap; }
+  .status .ok { color:#52e6f2; }
+  .status .err { color:#ff6b6b; }
+  .conn-state { font-family:"JetBrains Mono",monospace; font-size:12px; margin-top:14px; }
+  .conn-state.ok { color:#52e6f2; }
+  .conn-state.bad { color:#ff6b6b; }
   a.dl { color:#52e6f2; }
+  details summary { cursor:pointer; color:#8a90a3; font-size:13px; margin-top:10px; }
+  textarea { width:100%; height:120px; margin-top:10px; background:#0d0f16; border:1px solid #262a38; color:#eae8f2; font-family:"JetBrains Mono",monospace; font-size:12px; padding:12px; border-radius:3px; }
 </style>
 </head>
 <body>
 
-<h1>Добавить новое оформление</h1>
+<h1>Опубликовать оформление</h1>
 <p class="hint">
-  Эта страница — только для тебя, локальный помощник. Сайт статический (GitHub Pages),
-  поэтому «загрузка» работает так: ты готовишь файл и текст здесь, кладёшь картинку в папку
-  <code>images/</code>, добавляешь запись в <code>data/designs.json</code> — и пушишь на GitHub.
+  Заполняешь форму — жмёшь «Опубликовать» — картинка и запись в каталоге сами
+  уходят в репозиторий на GitHub. Сайт обновится через 10–30 секунд, руками
+  ничего заливать не нужно.
 </p>
 
-<div class="step">
-  <label>1. Номер оформления</label>
+<div class="card">
+  <h2>1. Подключение к GitHub</h2>
+  <p class="hint">Нужен персональный токен с доступом только к этому репозиторию. Делается один раз:</p>
+  <p class="hint">
+    Открой
+    <a class="dl" href="https://github.com/settings/personal-access-tokens/new" target="_blank" rel="noopener">github.com/settings/personal-access-tokens/new</a>
+    → Repository access: <b>Only select repositories</b> → выбери свой репозиторий →
+    Permissions → <b>Contents: Read and write</b> → Generate token → скопируй его (показывается один раз).
+  </p>
+
+  <label>Владелец репозитория (твой ник на GitHub)</label>
+  <input type="text" id="ownerInput" placeholder="blazerAMATORI">
+
+  <label>Название репозитория</label>
+  <input type="text" id="repoInput" placeholder="tearzzqDESIGN">
+
+  <label>Ветка</label>
+  <input type="text" id="branchInput" placeholder="main" value="main">
+
+  <label>Персональный токен (github_pat_...)</label>
+  <input type="password" id="tokenInput" placeholder="github_pat_...">
+
+  <button id="saveConnBtn">Сохранить подключение</button>
+  <div class="conn-state" id="connState"></div>
+</div>
+
+<div class="card">
+  <h2>2. Новое оформление</h2>
+
+  <label>Номер</label>
   <input type="number" id="idInput" placeholder="3">
 
-  <label>2. Название</label>
+  <label>Название</label>
   <input type="text" id="titleInput" placeholder="Например: Cold Cathedral">
 
-  <label>3. Файл изображения</label>
+  <label>Файл изображения</label>
   <input type="file" id="fileInput" accept="image/*">
   <img id="preview">
+
+  <button id="publishBtn">Опубликовать на сайт →</button>
+  <div class="status" id="status"></div>
 </div>
 
-<div class="step">
-  <label>4. Скачай файл с правильным именем</label>
-  <p class="hint">Сохрани его в папку <code>images/</code> проекта.</p>
-  <a id="downloadLink" class="dl" download style="display:none;">Скачать как design-XX.png →</a>
-</div>
-
-<div class="step">
-  <label>5. Добавь эту запись в data/designs.json</label>
-  <p class="hint">Вставь объект внутрь массива (не забудь запятую перед ним, если это не первая запись).</p>
-  <textarea id="jsonOut" readonly></textarea>
-  <button id="copyBtn">Скопировать JSON</button>
-</div>
+<details>
+  <summary>Ручной способ (без токена, если что-то пошло не так)</summary>
+  <div class="card">
+    <p class="hint">Скачай файл с готовым именем и положи в <code>images/</code> сам, а этот JSON вставь в <code>data/designs.json</code>:</p>
+    <a id="downloadLink" class="dl" download style="display:none;">Скачать переименованный файл →</a>
+    <textarea id="jsonOut" readonly></textarea>
+  </div>
+</details>
 
 <script src="js/admin.js"></script>
 </body>
