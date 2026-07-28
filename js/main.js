@@ -8,7 +8,15 @@ const lightbox = document.getElementById("lightbox");
 const lightboxImg = document.getElementById("lightboxImg");
 const lightboxNum = document.getElementById("lightboxNum");
 const lightboxTitle = document.getElementById("lightboxTitle");
-const pickHint = document.getElementById("pickHint");
+const toast = document.getElementById("toast");
+let toastTimer = null;
+
+function showToast(html, duration = 6000) {
+  toast.innerHTML = html;
+  toast.classList.add("is-visible");
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => toast.classList.remove("is-visible"), duration);
+}
 
 function pad(n) { return String(n).padStart(2, "0"); }
 
@@ -45,7 +53,6 @@ function openLightbox(index) {
   updateLightbox();
   lightbox.classList.add("is-open");
   lightbox.setAttribute("aria-hidden", "false");
-  pickHint.textContent = "";
 }
 
 function closeLightbox() {
@@ -59,7 +66,6 @@ function updateLightbox() {
   lightboxImg.alt = d.title;
   lightboxNum.textContent = `№${pad(d.id)}`;
   lightboxTitle.textContent = d.title;
-  pickHint.textContent = "";
 }
 
 function step(delta) {
@@ -83,13 +89,24 @@ document.addEventListener("keydown", (e) => {
 document.getElementById("pickBtn").addEventListener("click", async () => {
   const d = designs[activeIndex];
   const message = `Здравствуйте! Выбрал оформление №${pad(d.id)} («${d.title}») с сайта-каталога.`;
+  let copied = false;
 
   try {
     await navigator.clipboard.writeText(message);
-    pickHint.textContent = "Сообщение скопировано — вставьте его в чат на FunPay";
+    copied = true;
   } catch (e) {
-    pickHint.textContent = `Скопируйте вручную: ${message}`;
+    copied = false;
   }
+
+  showToast(`
+    <strong>${copied ? "Готово — текст скопирован ✓" : "Скопируйте текст вручную:"}</strong>
+    ${!copied ? `<span class="toast__manual">${message}</span>` : ""}
+    <ol>
+      <li>Сейчас откроется профиль продавца на FunPay в новой вкладке</li>
+      <li>Нажмите там кнопку «Написать»</li>
+      <li>Вставьте текст в поле сообщения (Ctrl+V, на телефоне — зажать и «Вставить») и отправьте</li>
+    </ol>
+  `, 9000);
 
   window.open(FUNPAY_URL, "_blank", "noopener");
 });
